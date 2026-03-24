@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gerador de Criativos Cinematograficos</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,700;1,700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#08070a;--surface:#0f0e13;--card:#13111a;--border:#252233;--border2:#342f48;--gold:#d4a843;--gold2:#f0c96a;--purple:#7c5cbf;--purple2:#a07de8;--amber:#c96b2a;--green:#2e7a50;--red:#b03030;--text:#eee8f8;--muted:#6a6480;--muted2:#9990b5;--r:14px;--rs:9px}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;font-size:14px;line-height:1.6;min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;top:-300px;left:50%;transform:translateX(-50%);width:1000px;height:700px;background:radial-gradient(ellipse at 25% 40%,rgba(124,92,191,.1) 0%,transparent 55%),radial-gradient(ellipse at 75% 55%,rgba(212,168,67,.07) 0%,transparent 50%);pointer-events:none;z-index:0}
+.wrap{max-width:960px;margin:0 auto;padding:0 18px 100px;position:relative;z-index:1}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 0;margin-bottom:6px;border-bottom:1px solid var(--border)}
+.topbar-logo{font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-style:italic;color:var(--gold)}
+.topbar-user{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--muted2)}
+.btn-sair{background:transparent;border:1px solid var(--border2);border-radius:6px;color:var(--muted);cursor:pointer;font-family:'Outfit',sans-serif;font-size:11px;padding:5px 12px;transition:all .2s}
+.btn-sair:hover{border-color:var(--red);color:#e07070}
+.hero{padding:36px 0 30px;text-align:center}
+.hero-eye{display:inline-flex;align-items:center;gap:8px;font-size:11px;font-weight:500;letter-spacing:.2em;text-transform:uppercase;color:var(--purple2);margin-bottom:14px}
+.hero-eye::before,.hero-eye::after{content:'';display:block;width:20px;height:1px;background:var(--purple2);opacity:.4}
+.hero h1{font-family:'Cormorant Garamond',serif;font-size:clamp(1.9rem,5vw,3.2rem);font-weight:700;line-height:1.05;letter-spacing:-.02em;color:var(--text)}
+.hero h1 em{color:var(--gold);font-style:italic;display:block}
+.hero-sub{font-size:13px;color:var(--muted2);font-weight:300;max-width:380px;margin:10px auto 0}
+.hero-pills{display:flex;flex-wrap:wrap;gap:7px;justify-content:center;margin-top:16px}
+.h-pill{display:inline-flex;align-items:center;background:rgba(124,92,191,.08);border:1px solid rgba(124,92,191,.18);border-radius:100px;padding:4px 11px;font-size:11px;color:var(--purple2)}
+.form-shell{background:var(--card);border:1px solid var(--border);border-radius:20px;overflow:hidden;margin-bottom:14px;box-shadow:0 20px 70px rgba(0,0,0,.5)}
+.fsec{padding:24px 28px;border-bottom:1px solid var(--border)}
+.fsec:last-child{border-bottom:none}
+.sec-head{display:flex;align-items:center;gap:9px;margin-bottom:18px}
+.sec-ico{width:24px;height:24px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;font-weight:700;color:#fff}
+.ico-gold{background:rgba(212,168,67,.8)}.ico-purple{background:rgba(124,92,191,.8)}.ico-amber{background:rgba(201,107,42,.8)}.ico-green{background:rgba(46,122,80,.8)}.ico-red{background:rgba(176,48,48,.8)}.ico-blue{background:rgba(40,100,200,.8)}
+.sec-title{font-size:10px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--muted2)}
+.sec-desc{font-size:11px;color:var(--muted);margin-top:1px}
+.fg2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.fg3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.fg1{display:grid;grid-template-columns:1fr;gap:12px}
+.f{display:flex;flex-direction:column;gap:6px}
+.f.span2{grid-column:1/-1}
+label{font-size:10px;font-weight:600;letter-spacing:.08em;color:var(--muted);text-transform:uppercase}
+input,select,textarea{background:var(--surface);border:1px solid var(--border);border-radius:var(--rs);color:var(--text);font-family:'Outfit',sans-serif;font-size:14px;padding:10px 12px;width:100%;outline:none;transition:border-color .2s,box-shadow .2s;-webkit-appearance:none;appearance:none}
+select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%236a6480' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 11px center;padding-right:32px;cursor:pointer}
+select option{background:#13111a}
+input:focus,select:focus,textarea:focus{border-color:var(--purple);box-shadow:0 0 0 3px rgba(124,92,191,.1)}
+textarea{resize:vertical;min-height:64px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:2px}
+.chip{background:var(--surface);border:1px solid var(--border);border-radius:100px;color:var(--muted2);cursor:pointer;font-family:'Outfit',sans-serif;font-size:12px;padding:5px 12px;transition:all .15s;user-select:none;white-space:nowrap}
+.chip:hover:not(.on){border-color:var(--border2);color:var(--text)}
+.chip.on{background:rgba(124,92,191,.14);border-color:var(--purple);color:var(--purple2);font-weight:500}
+.chip.g.on{background:rgba(212,168,67,.1);border-color:var(--gold);color:var(--gold2)}
+.chip.a.on{background:rgba(201,107,42,.1);border-color:var(--amber);color:#e88c50}
+.chip.r.on{background:rgba(176,48,48,.1);border-color:var(--red);color:#e07070}
+.chip.gr.on{background:rgba(46,122,80,.12);border-color:var(--green);color:#6ecf96}
+.chip.bl.on{background:rgba(40,100,200,.1);border-color:#4a80e0;color:#7ab0f0}
+.color-chip{width:30px;height:30px;border-radius:50%;border:2px solid transparent;cursor:pointer;transition:all .15s;position:relative;flex-shrink:0}
+.color-chip.on{border-color:#fff;transform:scale(1.2)}
+.color-chip.on::after{content:'V';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff;font-weight:700;text-shadow:0 1px 3px rgba(0,0,0,.9)}
+.color-row{display:flex;flex-wrap:wrap;gap:7px;margin-top:4px}
+.toggle-wrap{display:flex}
+.tog{background:var(--surface);border:1px solid var(--border);color:var(--muted2);cursor:pointer;font-family:'Outfit',sans-serif;font-size:13px;padding:8px 16px;transition:all .15s;user-select:none}
+.tog:first-child{border-radius:var(--rs) 0 0 var(--rs)}
+.tog:last-child{border-radius:0 var(--rs) var(--rs) 0;border-left:none}
+.tog:not(:first-child):not(:last-child){border-left:none}
+.tog.on{background:rgba(124,92,191,.15);border-color:var(--purple);color:var(--purple2);font-weight:500;z-index:1}
+.gen-btn{width:100%;padding:17px;background:linear-gradient(135deg,#7c5cbf 0%,#d4a843 100%);border:none;border-radius:var(--r);color:#fff;font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:700;font-style:italic;cursor:pointer;position:relative;overflow:hidden;transition:opacity .2s,transform .15s,box-shadow .2s;box-shadow:0 8px 40px rgba(124,92,191,.28);margin-top:4px}
+.gen-btn:hover{opacity:.93;box-shadow:0 12px 50px rgba(124,92,191,.38)}
+.gen-btn:active{transform:scale(.99)}
+.gen-btn:disabled{opacity:.4;cursor:not-allowed;transform:none;box-shadow:none}
+#loading{display:none;padding:40px 20px}
+.prog-shell{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px 28px}
+.prog-title{font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-style:italic;color:var(--gold);margin-bottom:16px;text-align:center}
+.prog-track{background:var(--surface);border-radius:100px;height:7px;overflow:hidden;margin-bottom:11px}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--purple),var(--gold));border-radius:100px;transition:width .5s ease;width:0%}
+.prog-meta{display:flex;justify-content:space-between;font-size:12px;color:var(--muted2)}
+.prog-scenes{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:16px}
+.prog-dot{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:9px 7px;text-align:center;font-size:11px;color:var(--muted);transition:all .3s}
+.prog-dot.done{background:rgba(46,122,80,.12);border-color:var(--green);color:#6ecf96}
+.prog-dot.active{background:rgba(124,92,191,.12);border-color:var(--purple);color:var(--purple2);animation:pulse .8s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
+#output{display:none}
+.out-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px}
+.out-title{font-family:'Cormorant Garamond',serif;font-size:1.6rem;font-weight:700;font-style:italic;color:var(--gold)}
+.bbar-btn{background:transparent;border:1px solid var(--border2);border-radius:var(--rs);color:var(--muted2);cursor:pointer;font-family:'Outfit',sans-serif;font-size:11px;font-weight:500;padding:6px 12px;transition:all .2s}
+.bbar-btn:hover{border-color:var(--gold);color:var(--gold)}
+.bbar-btn.ok{border-color:var(--green);color:#6ecf96}
+.sc{background:var(--card);border:1px solid var(--border);border-radius:15px;margin-bottom:10px;overflow:hidden;animation:su .3s ease backwards;transition:border-color .2s}
+.sc:hover{border-color:var(--border2)}
+@keyframes su{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+.sc-top{display:flex;align-items:center;gap:10px;padding:13px 17px;cursor:pointer;user-select:none;transition:background .15s}
+.sc-top:hover{background:rgba(255,255,255,.012)}
+.sc-num{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;font-family:'Cormorant Garamond',serif}
+.n1{background:rgba(212,168,67,.16);color:var(--gold)}.n2{background:rgba(124,92,191,.14);color:var(--purple2)}.n3{background:rgba(46,122,80,.14);color:#6ecf96}.n4{background:rgba(176,48,48,.12);color:#e07070}.n5{background:rgba(212,168,67,.1);color:var(--gold2)}.n6{background:rgba(124,92,191,.1);color:var(--purple2)}
+.sc-info{flex:1}
+.sc-name{font-weight:500;font-size:13px;color:var(--text);line-height:1.3}
+.sc-meta{font-size:11px;color:var(--muted);margin-top:1px}
+.sc-veo-btn{background:rgba(124,92,191,.1);border:1px solid rgba(124,92,191,.22);border-radius:6px;color:var(--purple2);cursor:pointer;font-family:'Outfit',sans-serif;font-size:11px;font-weight:500;padding:5px 11px;white-space:nowrap;transition:all .2s;flex-shrink:0}
+.sc-veo-btn:hover{background:rgba(124,92,191,.2);border-color:var(--purple2)}
+.sc-chev{color:var(--muted);font-size:10px;transition:transform .2s;flex-shrink:0}
+.sc.open .sc-chev{transform:rotate(180deg)}
+.sc-body{display:none;padding:0 17px 20px}
+.sc.open .sc-body{display:block}
+.sc-div{height:1px;background:var(--border);margin-bottom:17px}
+.hook-badge{display:inline-flex;align-items:center;background:rgba(212,168,67,.1);border:1px solid rgba(212,168,67,.22);border-radius:7px;padding:5px 11px;font-size:11px;color:var(--gold2);font-weight:600;margin-bottom:11px}
+.fala-para{background:rgba(124,92,191,.06);border:1px solid rgba(124,92,191,.16);border-radius:7px;padding:9px 13px;margin-bottom:12px;font-size:12px;color:var(--purple2)}
+.copy-box{background:rgba(212,168,67,.04);border:1px solid rgba(212,168,67,.12);border-left:3px solid var(--gold);border-radius:0 9px 9px 0;padding:11px 14px;font-family:'Cormorant Garamond',serif;font-size:15px;font-style:italic;color:var(--text);line-height:1.65;margin-bottom:15px}
+.meta-g{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:15px}
+.m-lbl{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:3px}
+.m-val{font-size:12px;color:var(--muted2);line-height:1.55}
+.veo-lbl{font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#2e7a50;margin-bottom:6px}
+.veo-box{background:#060e09;border:1px solid #162a1e;border-radius:9px;padding:13px 15px;font-size:11.5px;color:#6ecf96;line-height:1.85;white-space:pre-wrap;word-break:break-word;font-family:'Outfit',monospace}
+.veo-acts{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.vbtn{display:inline-flex;align-items:center;gap:4px;background:transparent;border:1px solid #162a1e;border-radius:6px;color:#2e7a50;cursor:pointer;font-family:'Outfit',sans-serif;font-size:11px;font-weight:500;padding:6px 12px;transition:all .2s}
+.vbtn:hover{border-color:#2e7a50;color:#6ecf96}
+.vbtn.copied{border-color:var(--gold);color:var(--gold);background:rgba(212,168,67,.07)}
+.v3btn{display:inline-flex;align-items:center;gap:4px;background:rgba(124,92,191,.1);border:1px solid rgba(124,92,191,.22);border-radius:6px;color:var(--purple2);cursor:pointer;font-family:'Outfit',sans-serif;font-size:11px;font-weight:500;padding:6px 12px;transition:all .2s}
+.v3btn:hover{background:rgba(124,92,191,.2);border-color:var(--purple2)}
+.rot-card{background:var(--card);border:1px solid var(--border);border-radius:15px;overflow:hidden;margin-top:10px;animation:su .3s ease .3s backwards}
+.rot-head{display:flex;align-items:center;gap:10px;padding:13px 17px;border-bottom:1px solid var(--border);cursor:pointer;user-select:none;transition:background .15s}
+.rot-head:hover{background:rgba(255,255,255,.012)}
+.rot-ico{width:24px;height:24px;background:rgba(212,168,67,.1);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px}
+.rot-ttl{flex:1;font-weight:500;font-size:13px}
+.rot-chev{color:var(--muted);font-size:10px;transition:transform .2s}
+.rot-card.open .rot-chev{transform:rotate(180deg)}
+.rot-body{display:none;padding:18px}
+.rot-card.open .rot-body{display:block}
+.rot-txt{font-size:12.5px;color:var(--muted2);line-height:1.9;white-space:pre-wrap}
+.err{background:rgba(176,48,48,.08);border:1px solid rgba(176,48,48,.2);border-radius:9px;color:#e07070;padding:12px 16px;font-size:13px;margin-top:10px}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(100px);background:#1a1825;border:1px solid var(--border2);border-radius:100px;padding:11px 22px;font-size:13px;color:var(--text);box-shadow:0 8px 32px rgba(0,0,0,.6);z-index:9999;transition:transform .35s cubic-bezier(.34,1.56,.64,1);white-space:nowrap;pointer-events:none}
+.toast.show{transform:translateX(-50%) translateY(0)}
+footer{text-align:center;margin-top:52px;padding-bottom:20px;color:var(--muted);font-size:11px;opacity:.28;letter-spacing:.06em}
+@media(max-width:640px){.fg2,.fg3{grid-template-columns:1fr}.f.span2{grid-column:1}.fsec{padding:18px 14px}.meta-g{grid-template-columns:1fr}.hero h1{font-size:2rem}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="topbar">
+  <div class="topbar-logo">Gerador de Criativos</div>
+  <div class="topbar-user">
+    <span id="userEmail" style="font-size:12px;color:#6a6480"></span>
+    <button class="btn-sair" onclick="sair()">Sair</button>
+  </div>
+</div>
+
+<header class="hero">
+  <div class="hero-eye">Ferramenta Profissional</div>
+  <h1>Gerador de Criativos<em>Cinematograficos</em></h1>
+  <p class="hero-sub">Preencha o briefing e receba roteiro + prompts Veo3 prontos para colar.</p>
+  <div class="hero-pills">
+    <span class="h-pill">Personagem consistente</span>
+    <span class="h-pill">Somente dia ensolarado</span>
+    <span class="h-pill">Prompts ultra-detalhados</span>
+  </div>
+</header>
+
+<div class="form-shell">
+
+<div class="fsec">
+  <div class="sec-head"><div class="sec-ico ico-gold">P</div><div><div class="sec-title">Protagonista</div><div class="sec-desc">Detalhes visuais para consistencia em todas as cenas</div></div></div>
+  <div class="fg2">
+    <div class="f"><label>Nome (opcional)</label><input id="nome" type="text" placeholder="Ex: Dona Maria, Dona Luzia..."></div>
+    <div class="f"><label>Idade</label><input id="idade" type="number" value="66" min="50" max="85"></div>
+    <div class="f span2">
+      <label>Tom de pele</label>
+      <div class="chips" id="pele-c">
+        <span class="chip g" onclick="sc(this,'pele','very fair white skin, light complexion')">Branca</span>
+        <span class="chip g" onclick="sc(this,'pele','light olive-brown skin, light morena complexion')">Parda clara</span>
+        <span class="chip g on" onclick="sc(this,'pele','medium warm brown skin, morena complexion')">Parda</span>
+        <span class="chip g" onclick="sc(this,'pele','rich dark brown skin, dark morena complexion')">Morena</span>
+        <span class="chip g" onclick="sc(this,'pele','deep dark skin, Black Brazilian complexion')">Negra</span>
+      </div>
+      <input type="hidden" id="pele" value="medium warm brown skin, morena complexion">
+    </div>
+    <div class="f">
+      <label>Cor do cabelo</label>
+      <div class="chips" id="cabcor-c">
+        <span class="chip g" onclick="sc(this,'cabcor','jet black hair')">Preto</span>
+        <span class="chip g on" onclick="sc(this,'cabcor','silver-grey streaked hair')">Grisalho</span>
+        <span class="chip g" onclick="sc(this,'cabcor','fully white hair')">Branco</span>
+        <span class="chip g" onclick="sc(this,'cabcor','dark brown hair')">Castanho</span>
+      </div>
+      <input type="hidden" id="cabcor" value="silver-grey streaked hair">
+    </div>
+    <div class="f">
+      <label>Estilo do cabelo</label>
+      <div class="chips" id="cabes-c">
+        <span class="chip g on" onclick="sc(this,'cabestilo','hair neatly tied in a low bun at the nape')">Coque baixo</span>
+        <span class="chip g" onclick="sc(this,'cabestilo','hair in a single long braid down her back')">Tranca</span>
+        <span class="chip g" onclick="sc(this,'cabestilo','hair simply pinned back loosely')">Preso simples</span>
+        <span class="chip g" onclick="sc(this,'cabestilo','short loose hair')">Solto curto</span>
+      </div>
+      <input type="hidden" id="cabestilo" value="hair neatly tied in a low bun at the nape">
+    </div>
+    <div class="f">
+      <label>Tipo de roupa</label>
+      <div class="chips" id="roupa-c">
+        <span class="chip g on" onclick="sc(this,'roupa','simple cotton dress')">Vestido</span>
+        <span class="chip g" onclick="sc(this,'roupa','blouse tucked into a long flowing skirt')">Blusa + Saia</span>
+        <span class="chip g" onclick="sc(this,'roupa','loose comfortable house dress')">Camisao</span>
+      </div>
+      <input type="hidden" id="roupa" value="simple cotton dress">
+    </div>
+    <div class="f">
+      <label>Cor da roupa</label>
+      <div class="color-row" id="rcor-c">
+        <div class="color-chip on" style="background:#3a6ebf" title="Azul" onclick="scc(this,'rcor','blue','blue-colored')"></div>
+        <div class="color-chip" style="background:#c94a7a" title="Rosa" onclick="scc(this,'rcor','pink','pink-colored')"></div>
+        <div class="color-chip" style="background:#3a9955" title="Verde" onclick="scc(this,'rcor','green','green-colored')"></div>
+        <div class="color-chip" style="background:#c43030" title="Vermelho" onclick="scc(this,'rcor','red','red-colored')"></div>
+        <div class="color-chip" style="background:#e8e4d8" title="Branco" onclick="scc(this,'rcor','off-white','off-white cream-colored')"></div>
+        <div class="color-chip" style="background:#c4823a" title="Terracota" onclick="scc(this,'rcor','terracotta','terracotta-colored')"></div>
+        <div class="color-chip" style="background:conic-gradient(#3a6ebf,#c94a7a,#3a9955,#3a6ebf)" title="Floral" onclick="scc(this,'rcor','floral','colorful floral-patterned')"></div>
+        <div class="color-chip" style="background:repeating-linear-gradient(45deg,#555 0,#555 4px,#888 4px,#888 8px)" title="Xadrez" onclick="scc(this,'rcor','xadrez','plaid checkered-patterned')"></div>
+      </div>
+      <input type="hidden" id="rcor" value="blue"><input type="hidden" id="rcor-en" value="blue-colored">
+    </div>
+    <div class="f">
+      <label>Acessorio</label>
+      <div class="chips" id="acess-c">
+        <span class="chip g on" onclick="sc(this,'acess','wearing a white cloth apron tied around her waist')">Avental branco</span>
+        <span class="chip g" onclick="sc(this,'acess','with a wooden rosary beads hanging around her neck')">Terco no pescoco</span>
+        <span class="chip g" onclick="sc(this,'acess','with a faded cloth headscarf loosely tied')">Lenco na cabeca</span>
+        <span class="chip g" onclick="sc(this,'acess','no accessories')">Nenhum</span>
+      </div>
+      <input type="hidden" id="acess" value="wearing a white cloth apron tied around her waist">
+    </div>
+    <div class="f">
+      <label>Calcado</label>
+      <div class="chips" id="calc-c">
+        <span class="chip g on" onclick="sc(this,'calc','wearing worn brown leather sandals')">Sandalia couro</span>
+        <span class="chip g" onclick="sc(this,'calc','wearing simple rubber flip-flops')">Chinelo borracha</span>
+        <span class="chip g" onclick="sc(this,'calc','barefoot on the bare floor')">Descalca</span>
+      </div>
+      <input type="hidden" id="calc" value="wearing worn brown leather sandals">
+    </div>
+  </div>
+</div>
+
+<div class="fsec">
+  <div class="sec-head"><div class="sec-ico ico-blue">V</div><div><div class="sec-title">Voz e Sotaque</div><div class="sec-desc">Paje sempre com sotaque indigena ancestral (fixo)</div></div></div>
+  <div class="fg2">
+    <div class="f">
+      <label>Tom da voz</label>
+      <div class="chips" id="voz-c">
+        <span class="chip bl" onclick="sc(this,'voz','deep thick voice')">Grossa</span>
+        <span class="chip bl on" onclick="sc(this,'voz','medium neutral voice')">Media / Neutra</span>
+        <span class="chip bl" onclick="sc(this,'voz','soft thin voice')">Fina</span>
+      </div>
+      <input type="hidden" id="voz" value="medium neutral voice">
+    </div>
+    <div class="f">
+      <label>Sotaque (senhora + familiar)</label>
+      <div class="chips" id="sotaque-c">
+        <span class="chip bl on" onclick="sc(this,'sotaque','neutral standard Brazilian Portuguese accent')">Neutro</span>
+        <span class="chip bl" onclick="sc(this,'sotaque','strong Northeastern Brazilian nordestino accent')">Nordestino</span>
+        <span class="chip bl" onclick="sc(this,'sotaque','Minas Gerais mineiro Brazilian accent')">Mineiro</span>
+        <span class="chip bl" onclick="sc(this,'sotaque','Southern Brazilian gaucho accent')">Gaucho</span>
+        <span class="chip bl" onclick="sc(this,'sotaque','interior Sao Paulo caipira accent')">Caipira</span>
+      </div>
+      <input type="hidden" id="sotaque" value="neutral standard Brazilian Portuguese accent">
+    </div>
+  </div>
+  <div style="margin-top:11px;background:rgba(46,122,80,.07);border:1px solid rgba(46,122,80,.18);border-radius:9px;padding:9px 13px;font-size:12px;color:#6ecf96">
+    Paje: voz grave e pausada com sotaque indigena ancestral brasileiro — fixo em todos os criativos.
+  </div>
+</div>
+
+<div class="fsec">
+  <div class="sec-head"><div class="sec-ico ico-red">D</div><div><div class="sec-title">Dor e Limitacao Cotidiana</div></div></div>
+  <div class="fg2">
+    <div class="f">
+      <label>Regiao do corpo</label>
+      <div class="chips" id="dor-c">
+        <span class="chip r on" onclick="sc(this,'dor','severe chronic lower back and spine pain, cannot stand straight')">Coluna / Lombar</span>
+        <span class="chip r" onclick="sc(this,'dor','debilitating knee joint pain, knees swell and crack with every step')">Joelhos</span>
+        <span class="chip r" onclick="sc(this,'dor','sharp shoulder pain, cannot lift arm above waist')">Ombro</span>
+        <span class="chip r" onclick="sc(this,'dor','burning elbow joint pain, arm locks up')">Cotovelo</span>
+        <span class="chip r" onclick="sc(this,'dor','severe hand and finger joint pain, fingers stiffen and tremble')">Maos / Dedos</span>
+        <span class="chip r" onclick="sc(this,'dor','deep hip joint pain, limping with every step')">Quadril</span>
+        <span class="chip r" onclick="sc(this,'dor','sharp ankle pain, foot gives out when walking')">Tornozelo</span>
+        <span class="chip r" onclick="sc(this,'dor','neck and cervical spine pain, cannot turn head without agony')">Pescoco / Cervical</span>
+        <span class="chip r" onclick="sc(this,'dor','rib and chest side pain that burns with every breath')">Costela</span>
+      </div>
+      <input type="hidden" id="dor" value="severe chronic lower back and spine pain, cannot stand straight">
+    </div>
+    <div class="f">
+      <label>O que ela nao consegue mais</label>
+      <div class="chips" id="lim-c">
+        <span class="chip r on" onclick="sc(this,'lim','can no longer attend Sunday church mass due to the pain')">Ir a igreja</span>
+        <span class="chip r" onclick="sc(this,'lim','can no longer walk through the street market to buy groceries')">Ir a feira</span>
+        <span class="chip r" onclick="sc(this,'lim','can no longer cook meals for her family')">Cozinhar</span>
+        <span class="chip r" onclick="sc(this,'lim','can no longer sweep the floors of her home')">Varrer a casa</span>
+        <span class="chip r" onclick="sc(this,'lim','can no longer wash clothes by hand at the basin')">Lavar roupa</span>
+        <span class="chip r" onclick="sc(this,'lim','can no longer climb the stairs without stopping in pain')">Subir escada</span>
+        <span class="chip r" onclick="sc(this,'lim','can no longer walk through the backyard without pain')">Caminhar no quintal</span>
+        <span class="chip r" onclick="sc(this,'lim','can no longer carry grocery bags home from the market')">Carregar compras</span>
+        <span class="chip r" onclick="sc(this,'lim','can no longer bend down or squat to pick things up')">Agachar</span>
+        <span class="chip r" onclick="sc(this,'lim','can no longer sleep through the night due to constant pain')">Dormir direito</span>
+        <span class="chip r" onclick="sc(this,'lim','can no longer do embroidery or sewing that she loved')">Bordar / Costurar</span>
+        <span class="chip r" onclick="sc(this,'lim','can no longer hang wet clothes on the clothesline')">Estender roupa</span>
+      </div>
+      <input type="hidden" id="lim" value="can no longer attend Sunday church mass due to the pain">
+    </div>
+  </div>
+</div>
+
+<div class="fsec">
+  <div class="sec-head"><div class="sec-ico ico-purple">F</div><div><div class="sec-title">Familiar de Apoio</div><div class="sec-desc">Todos acima de 18 anos</div></div></div>
+  <div class="fg3">
+    <div class="f">
+      <label>Quem e</label>
+      <select id="familiar">
+        <option value="granddaughter, 20 years old">Neta (20 anos)</option>
+        <option value="grandson, 22 years old">Neto (22 anos)</option>
+        <option value="adult daughter, 35 years old">Filha (35 anos)</option>
+        <option value="adult son, 30 years old">Filho (30 anos)</option>
+        <option value="husband, 68 years old">Marido (68 anos)</option>
+        <option value="sister, 58 years old">Irma (58 anos)</option>
+        <option value="neighbor woman, 55 years old">Vizinha (55 anos)</option>
+        <option value="niece, 25 years old">Sobrinha (25 anos)</option>
+        <option value="nephew, 28 years old">Sobrinho (28 anos)</option>
+      </select>
+    </div>
+    <div class="f">
+      <label>Tom de pele</label>
+      <div class="chips" id="fpele-c">
+        <span class="chip on" onclick="sc(this,'fpele','fair light skin')">Clara</span>
+        <span class="chip" onclick="sc(this,'fpele','medium brown skin')">Parda</span>
+        <span class="chip" onclick="sc(this,'fpele','dark brown skin')">Morena</span>
+        <span class="chip" onclick="sc(this,'fpele','deep dark skin')">Negra</span>
+      </div>
+      <input type="hidden" id="fpele" value="fair light skin">
+    </div>
+    <div class="f">
+      <label>Cor da roupa</label>
+      <div class="color-row" id="frcor-c">
+        <div class="color-chip on" style="background:#c43030" title="Vermelho" onclick="scc(this,'frcor','red','red')"></div>
+        <div class="color-chip" style="background:#3a6ebf" title="Azul" onclick="scc(this,'frcor','blue','blue')"></div>
+        <div class="color-chip" style="background:#e8e4d8" title="Branco" onclick="scc(this,'frcor','white','white')"></div>
+        <div class="color-chip" style="background:#3a9955" title="Verde" onclick="scc(this,'frcor','green','green')"></div>
+        <div class="color-chip" style="background:#c4823a" title="Laranja" onclick="scc(this,'frcor','orange','orange')"></div>
+        <div class="color-chip" style="background:#8a3abf" title="Roxo" onclick="scc(this,'frcor','purple','purple')"></div>
+      </div>
+      <input type="hidden" id="frcor" value="red"><input type="hidden" id="frcor-en" value="red">
+    </div>
+  </div>
+</div>
+
+<div class="fsec">
+  <div class="sec-head"><div class="sec-ico ico-green">J</div><div><div class="sec-title">Paje e Ancestralidade</div></div></div>
+  <div class="fg2">
+    <div class="f">
+      <label>Genero</label>
+      <div class="chips" id="pjgen-c">
+        <span class="chip gr on" onclick="sc(this,'pjgen','indigenous male shaman healer')">Homem</span>
+        <span class="chip gr" onclick="sc(this,'pjgen','indigenous female shaman healer')">Mulher</span>
+      </div>
+      <input type="hidden" id="pjgen" value="indigenous male shaman healer">
+    </div>
+    <div class="f">
+      <label>Tom de pele</label>
+      <div class="chips" id="pjpele-c">
+        <span class="chip gr" onclick="sc(this,'pjpele','light copper-toned skin')">Cobre claro</span>
+        <span class="chip gr on" onclick="sc(this,'pjpele','rich deep copper-brown skin')">Cobre escuro</span>
+        <span class="chip gr" onclick="sc(this,'pjpele','very dark brown skin')">Marrom escuro</span>
+      </div>
+      <input type="hidden" id="pjpele" value="rich deep copper-brown skin">
+    </div>
+    <div class="f">
+      <label>Cabelo</label>
+      <div class="chips" id="pjcab-c">
+        <span class="chip gr on" onclick="sc(this,'pjcab','very long straight black hair flowing down')">Liso longo preto</span>
+        <span class="chip gr" onclick="sc(this,'pjcab','long black hair in thick braids')">Tranca longa</span>
+        <span class="chip gr" onclick="sc(this,'pjcab','short black hair close-cropped')">Curto preto</span>
+      </div>
+      <input type="hidden" id="pjcab" value="very long straight black hair flowing down">
+    </div>
+    <div class="f">
+      <label>Acessorios</label>
+      <div class="chips" id="pjacess-c">
+        <span class="chip gr on" onclick="sc(this,'pjacess','wearing a large colorful feathered headdress and multiple layered bead necklaces')">Cocar + colares</span>
+        <span class="chip gr" onclick="sc(this,'pjacess','wearing multiple layered bead necklaces, no headdress')">So colares</span>
+        <span class="chip gr" onclick="sc(this,'pjacess','with traditional red and black geometric body paint on face and arms')">Pintura corporal</span>
+        <span class="chip gr" onclick="sc(this,'pjacess','minimal, only a simple woven natural fiber cord bracelet')">Minimalista</span>
+      </div>
+      <input type="hidden" id="pjacess" value="wearing a large colorful feathered headdress and multiple layered bead necklaces">
+    </div>
+    <div class="f span2">
+      <label>Cenario do Paje (somente DIA ensolarado)</label>
+      <div class="chips" id="pjcen-c">
+        <span class="chip gr on" onclick="sc(this,'pjcen','lush dense tropical forest with a traditional thatched-roof hut visible in the background, bright midday sunlight filtering through the tall forest canopy creating dappled golden light patterns on the earth floor')">Floresta + Oca</span>
+        <span class="chip gr" onclick="sc(this,'pjcen','Amazon riverbank with crystal clear shallow water reflecting the bright blue sky and sunlight, dense green jungle vegetation on both banks, birds visible in canopy, bright sunny morning')">Beira de Rio</span>
+        <span class="chip gr" onclick="sc(this,'pjcen','open highland savanna with tall golden dry grass swaying in warm wind, vast bright blue sky with some white clouds, distant hills on the horizon, full bright sunny daylight')">Serra / Capim Alto</span>
+      </div>
+      <input type="hidden" id="pjcen" value="lush dense tropical forest with a traditional thatched-roof hut visible in the background, bright midday sunlight filtering through the tall forest canopy creating dappled golden light patterns on the earth floor">
+    </div>
+    <div class="f">
+      <label>Cor da roupa</label>
+      <div class="color-row" id="pjrcor-c">
+        <div class="color-chip on" style="background:#8B5E3C" title="Ocre" onclick="scc(this,'pjrcor','ocre','earthy ochre-brown')"></div>
+        <div class="color-chip" style="background:#c43030" title="Vermelho" onclick="scc(this,'pjrcor','red','deep ceremonial red')"></div>
+        <div class="color-chip" style="background:#e8e4d8" title="Natural" onclick="scc(this,'pjrcor','natural','natural off-white woven fiber')"></div>
+        <div class="color-chip" style="background:#1a4a2e" title="Verde" onclick="scc(this,'pjrcor','green','dark forest green')"></div>
+      </div>
+      <input type="hidden" id="pjrcor" value="ocre"><input type="hidden" id="pjrcor-en" value="earthy ochre-brown">
+    </div>
+    <div class="f">
+      <label>Tom do Paje</label>
+      <div class="chips" id="pjtom-c">
+        <span class="chip gr on" onclick="sc(this,'pjtom','mystical and ancestral, speaking slowly with deep spiritual wisdom')">Mistico</span>
+        <span class="chip gr" onclick="sc(this,'pjtom','urgent and direct, warning tone, speaking fast with intensity')">Urgente</span>
+        <span class="chip gr" onclick="sc(this,'pjtom','empathetic and warm, sharing personal pain, intimate tone')">Empatico</span>
+        <span class="chip gr" onclick="sc(this,'pjtom','revealing a hidden secret, conspiratorial, leaning in close')">Revelador</span>
+        <span class="chip gr" onclick="sc(this,'pjtom','challenging and provocative, testing the viewer to act')">Desafiador</span>
+      </div>
+      <input type="hidden" id="pjtom" value="mystical and ancestral, speaking slowly with deep spiritual wisdom">
+    </div>
+  </div>
+</div>
+
+<div class="fsec">
+  <div class="sec-head"><div class="sec-ico ico-amber">P</div><div><div class="sec-title">Produto e Tom Emocional</div></div></div>
+  <div class="fg2">
+    <div class="f">
+      <label>Produto (ato de fe)</label>
+      <div class="chips" id="prod-c">
+        <span class="chip a on" onclick="sc(this,'prod','a small bright red herbal capsule held between two fingers')">Capsula vermelha</span>
+        <span class="chip a" onclick="sc(this,'prod','a small dark amber glass bottle of natural herbal oil')">Oleo natural</span>
+        <span class="chip a" onclick="sc(this,'prod','a steaming clay mug of dark herbal root tea')">Cha de raizes</span>
+        <span class="chip a" onclick="sc(this,'prod','a small dark glass dropper bottle of concentrated herbal root extract')">Extrato de raizes</span>
+      </div>
+      <input type="hidden" id="prod" value="a small bright red herbal capsule held between two fingers">
+    </div>
+    <div class="f">
+      <label>Tom emocional</label>
+      <div class="chips" id="tom-c">
+        <span class="chip on" onclick="sc(this,'tom','tender hope, soft warm emotionally touching')">Esperanca</span>
+        <span class="chip" onclick="sc(this,'tom','raw urgency, fast-paced time running out cannot wait')">Urgencia</span>
+        <span class="chip" onclick="sc(this,'tom','deep fear of worsening, heavy grave dark emotional weight')">Medo</span>
+        <span class="chip" onclick="sc(this,'tom','spiritual faith and gratitude, uplifting divine luminous')">Fe</span>
+        <span class="chip" onclick="sc(this,'tom','righteous anger, she is fed up no more suffering fighting back')">Raiva</span>
+      </div>
+      <input type="hidden" id="tom" value="tender hope, soft warm emotionally touching">
+    </div>
+  </div>
+</div>
+
+<div class="fsec">
+  <div class="sec-head"><div class="sec-ico ico-gold">G</div><div><div class="sec-title">Gancho de Abertura - Cena 1</div><div class="sec-desc">A cena mais importante — para o dedo no scroll.</div></div></div>
+  <div class="fg1">
+    <div class="f">
+      <label>Tipo de gancho</label>
+      <div class="chips" id="gancho-c">
+        <span class="chip g on" onclick="sc(this,'gancho','PAIN_CLOSE: Extreme close-up on the painful body part. The elderly woman is doing a simple daily task when pain suddenly hits, she gasps, freezes, grabs the hurting spot with both hands. Camera slowly pulls back revealing her face twisted in agony. Raw, visceral, stops the scroll immediately.')">Dor extrema</span>
+        <span class="chip g" onclick="sc(this,'gancho','SECURITY_CAM_FALL: CCTV_STYLE. Grainy black and white high-angle security camera from corner mount. Choose one: (A) Elderly woman tries to get out of bed at night, legs fail her, falls sideways off the edge, cannot get back up, lies calling for help in silence. (B) Elderly woman climbs stairs holding railing, halfway up her knee buckles, she tumbles down, landing at the bottom. No one comes. Raw ambient sound only. CCTV: timestamp corner, fisheye distortion, static grain.')">CCTV - Queda</span>
+        <span class="chip g" onclick="sc(this,'gancho','SECURITY_CAM_ATTACK: CCTV_STYLE. Grainy desaturated security camera exterior. See cctvtipo for exact action. CCTV: high-angle corner mount, timestamp, grain, fisheye distortion, no music, raw urban ambient only.')">CCTV - Ataque Paje</span>
+        <span class="chip g" onclick="sc(this,'gancho','SHAMAN_WARNING: The shaman looks directly into camera with intense eyes and urgent energy. Leans slightly forward toward lens. Delivers powerful warning directly to viewer. Feels like speaking only to you.')">Paje direto para camera</span>
+        <span class="chip g" onclick="sc(this,'gancho','FAMILY_DESPERATE: Family member walks into frame holding phone, visibly emotional and distressed. Speaks directly to camera begging for help for the elderly woman. Camera catches their tears. Handheld shaky, feels authentic.')">Familiar desesperado</span>
+        <span class="chip g" onclick="sc(this,'gancho','REVERSE_TRANSFORMATION: Opens on elderly woman laughing and moving freely, then HARD CUT to her crying in pain in bed. Before and after contrast is violent and immediate.')">Transformacao reversa</span>
+      </div>
+      <input type="hidden" id="gancho" value="PAIN_CLOSE: Extreme close-up on the painful body part. The elderly woman is doing a simple daily task when pain suddenly hits, she gasps, freezes, grabs the hurting spot with both hands. Camera slowly pulls back revealing her face twisted in agony. Raw, visceral, stops the scroll immediately.">
+    </div>
+    <div id="cctv-opts" style="display:none;margin-top:11px">
+      <label>Acao na camera de seguranca (ataque ao Paje)</label>
+      <div class="chips" id="cctv-c" style="margin-top:7px">
+        <span class="chip r on" onclick="sc(this,'cctvtipo','BLOQUEIO: Shaman walks quickly, two men step out from doorway positioning themselves across sidewalk, arms spread wide, blocking his path completely. Tense standoff. Shaman holds bag close. CCTV grainy desaturated high-angle, timestamp, fisheye, ambient city sounds only.')">Bloqueiam o caminho</span>
+        <span class="chip r" onclick="sc(this,'cctvtipo','CONFRONTO: Shaman walking calmly, man steps in front and grabs his arm firmly, pulling him to a stop. They face each other in tense physical standoff, pushing and pulling arms. Second man approaches surrounding shaman. Firm grip, physical resistance. CCTV grainy desaturated.')">Agarram o braco</span>
+        <span class="chip r" onclick="sc(this,'cctvtipo','CERCAM: CCTV faces toward shaman running clutching herb bag. Two men step out from both sides converging, surrounding him and forcing him to stop. They press close, reaching toward bag. Shaman turns trying to find way out. CCTV desaturated front-angle.')">Cercam pela frente</span>
+        <span class="chip r" onclick="sc(this,'cctvtipo','CARRO: Shaman walks calmly, black car accelerates and stops abruptly blocking his path. Two men in dark suits step out and walk toward shaman purposefully. They stand blocking forward way, looming close, gesturing warning. CCTV exterior desaturated.')">Carro fecha caminho</span>
+        <span class="chip r" onclick="sc(this,'cctvtipo','MOTO: Shaman sits outside home speaking on phone. Two men arrive on motorcycle and park right in front. Dismount slowly, begin circling him, walking around slowly, leaning close, pointing at him and his phone. CCTV high-angle.')">Chegam de moto</span>
+        <span class="chip r" onclick="sc(this,'cctvtipo','CELULAR: Shaman at bus stop speaking on phone. Two men on bench nearby stand up and walk toward him. One reaches out and knocks phone from his hand, it falls to ground. Men stare him down making clear warning gestures. CCTV high-angle ambient street only.')">Derrubam celular</span>
+      </div>
+      <input type="hidden" id="cctvtipo" value="BLOQUEIO: Shaman walks quickly, two men step out from doorway positioning themselves across sidewalk, arms spread wide, blocking his path completely. Tense standoff. Shaman holds bag close. CCTV grainy desaturated high-angle, timestamp, fisheye, ambient city sounds only.">
+    </div>
+    <div class="fg2" style="margin-top:11px">
+      <div class="f">
+        <label>Numero de cenas</label>
+        <div class="toggle-wrap">
+          <div class="tog" onclick="setTog(this,'ncenas','5')">5 cenas</div>
+          <div class="tog on" onclick="setTog(this,'ncenas','6')">6 cenas</div>
+        </div>
+        <input type="hidden" id="ncenas" value="6">
+      </div>
+      <div class="f">
+        <label>Duracao por cena</label>
+        <select id="duracao">
+          <option value="5 to 6 seconds">5-6 segundos</option>
+          <option value="6 to 8 seconds" selected>6-8 segundos</option>
+          <option value="7 to 9 seconds">7-9 segundos</option>
+        </select>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="fsec">
+  <div class="sec-head"><div class="sec-ico ico-red">A</div><div><div class="sec-title">Antagonista (opcional)</div></div></div>
+  <div class="fg1">
+    <div class="f">
+      <label>Incluir cena de conflito?</label>
+      <div class="toggle-wrap">
+        <div class="tog on" onclick="setTog(this,'antativo','sim');document.getElementById('ant-opts').style.display='block'">Sim</div>
+        <div class="tog" onclick="setTog(this,'antativo','nao');document.getElementById('ant-opts').style.display='none'">Nao</div>
+      </div>
+      <input type="hidden" id="antativo" value="sim">
+    </div>
+    <div id="ant-opts" style="margin-top:11px">
+      <div class="f">
+        <label>Quem e o antagonista</label>
+        <div class="chips" id="ant-c">
+          <span class="chip r on" onclick="sc(this,'ant','a furious doctor in a pristine modern clinic, expensive tailored suit, marble desk, cold sterile blue-white fluorescent lighting, luxury medical equipment visible')">Doutor irritado</span>
+          <span class="chip r" onclick="sc(this,'ant','a powerful corporate executive in a sharp suit, floor-to-ceiling glass office with city skyline, making threatening phone calls, pure cold white office lighting')">Executivo</span>
+          <span class="chip r" onclick="sc(this,'ant','an angry pharmacist surrounded by walls of medicine boxes and prescription drugs, harsh white fluorescent store lighting, pointing aggressively')">Farmaceutico</span>
+        </div>
+        <input type="hidden" id="ant" value="a furious doctor in a pristine modern clinic, expensive tailored suit, marble desk, cold sterile blue-white fluorescent lighting, luxury medical equipment visible">
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="fsec">
+  <div class="sec-head"><div class="sec-ico ico-gold">+</div><div><div class="sec-title">Observacoes Extras (opcional)</div></div></div>
+  <div class="f">
+    <textarea id="extra" placeholder="Ex: cena de transformacao na feira, paje mais velho, filha chora na cena de apoio..."></textarea>
+  </div>
+</div>
+
+</div>
+
+<button class="gen-btn" id="genBtn" onclick="gerar()">Gerar</button>
+<div id="errDiv"></div>
+
+<div id="loading">
+  <div class="prog-shell">
+    <div class="prog-title">Gerando Criativo Cena por Cena</div>
+    <div class="prog-track"><div class="prog-fill" id="prog-bar-fill"></div></div>
+    <div class="prog-meta">
+      <span id="prog-label">Iniciando...</span>
+      <span id="prog-count">0 / 6</span>
+    </div>
+    <div class="prog-scenes" id="prog-dots"></div>
+  </div>
+</div>
+
+<div id="output">
+  <div class="out-bar">
+    <div class="out-title">Criativo Pronto</div>
+    <div><button class="bbar-btn" id="copyAllBtn" onclick="copiarTudo()">Copiar tudo</button></div>
+  </div>
+  <div id="scenesWrap"></div>
+</div>
+
+<footer>Gerador de Criativos Cinematograficos</footer>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+var SUPABASE_URL = 'https://yipnopdvicikejqvbjwr.supabase.co';
+var SUPABASE_ANON_KEY = 'sb_publishable_KfsH9F-Y-oCXwIQEpqYYUw_GPxz5U4-';
+var sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+var currentToken = null;
+
+// Verificar autenticacao ao carregar
+sb.auth.getSession().then(function(r) {
+  if (!r.data.session) { window.location.href = 'login.html'; return; }
+  currentToken = r.data.session.access_token;
+  document.getElementById('userEmail').textContent = r.data.session.user.email;
+  // Verificar se aluno esta ativo
+  sb.from('alunos').select('ativo').eq('email', r.data.session.user.email).single().then(function(res) {
+    if (!res.data || !res.data.ativo) { sb.auth.signOut(); window.location.href = 'login.html'; }
+  });
+});
+
+async function sair() { await sb.auth.signOut(); window.location.href = 'login.html'; }
+
+function sc(el, id, val) {
+  var chips = el.closest('.chips').querySelectorAll('.chip');
+  for (var i = 0; i < chips.length; i++) chips[i].classList.remove('on');
+  el.classList.add('on');
+  document.getElementById(id).value = val;
+  if (id === 'gancho') document.getElementById('cctv-opts').style.display = val.indexOf('SECURITY_CAM_ATTACK') >= 0 ? 'block' : 'none';
+}
+
+function scc(el, id, val, enVal) {
+  var chips = el.closest('.color-row').querySelectorAll('.color-chip');
+  for (var i = 0; i < chips.length; i++) chips[i].classList.remove('on');
+  el.classList.add('on');
+  document.getElementById(id).value = val;
+  var en = document.getElementById(id + '-en');
+  if (en) en.value = enVal || val;
+}
+
+function setTog(el, id, val) {
+  var togs = el.closest('.toggle-wrap').querySelectorAll('.tog');
+  for (var i = 0; i < togs.length; i++) togs[i].classList.remove('on');
+  el.classList.add('on');
+  document.getElementById(id).value = val;
+}
+
+function copyText(text, onSuccess) {
+  if (navigator.clipboard && location.protocol === 'https:') {
+    navigator.clipboard.writeText(text).then(function() { if (onSuccess) onSuccess(); }, function() { fallbackCopy(text, onSuccess); });
+  } else { fallbackCopy(text, onSuccess); }
+}
+
+function fallbackCopy(text, onSuccess) {
+  var ta = document.createElement('textarea');
+  ta.value = text; ta.setAttribute('readonly', '');
+  ta.style.position = 'absolute'; ta.style.left = '-9999px';
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand('copy'); if (onSuccess) onSuccess(); } catch(e) {}
+  document.body.removeChild(ta);
+}
+
+function gv(id) { var el = document.getElementById(id); return el ? el.value : ''; }
+
+function getData() {
+  return {
+    nome: gv('nome').trim() || 'Dona Maria', idade: gv('idade') || '66',
+    pele: gv('pele'), cabcor: gv('cabcor'), cabestilo: gv('cabestilo'),
+    roupa: gv('roupa'), rcorEn: gv('rcor-en'), acess: gv('acess'), calc: gv('calc'),
+    voz: gv('voz'), sotaque: gv('sotaque'), dor: gv('dor'), lim: gv('lim'),
+    familiar: gv('familiar'), fpele: gv('fpele'), frcorEn: gv('frcor-en'),
+    pjgen: gv('pjgen'), pjpele: gv('pjpele'), pjcab: gv('pjcab'),
+    pjacess: gv('pjacess'), pjcen: gv('pjcen'), pjrcorEn: gv('pjrcor-en'), pjtom: gv('pjtom'),
+    prod: gv('prod'), tom: gv('tom'), gancho: gv('gancho'), cctvtipo: gv('cctvtipo'),
+    ncenas: gv('ncenas'), duracao: gv('duracao'), antativo: gv('antativo'), ant: gv('ant'),
+    extra: gv('extra').trim()
+  };
+}
+
+function getSceneList(d) {
+  var c = d.antativo === 'sim', n = parseInt(d.ncenas, 10);
+  if (c && n >= 6) return [{num:1,tipo:'HOOK',label:'Gancho',emoji:'S1'},{num:2,tipo:'FAMILY',label:'Apoio Familiar',emoji:'S2'},{num:3,tipo:'HEALER',label:'Paje',emoji:'S3'},{num:4,tipo:'CONFLICT',label:'Conflito',emoji:'S4'},{num:5,tipo:'FAITH',label:'Fe/Acao',emoji:'S5'},{num:6,tipo:'TRANSFORMATION',label:'Transformacao',emoji:'S6'}];
+  if (!c && n >= 6) return [{num:1,tipo:'HOOK',label:'Gancho',emoji:'S1'},{num:2,tipo:'FAMILY',label:'Apoio Familiar',emoji:'S2'},{num:3,tipo:'HEALER',label:'Paje',emoji:'S3'},{num:4,tipo:'FAITH',label:'Fe/Acao',emoji:'S4'},{num:5,tipo:'TRANSFORMATION',label:'Transformacao',emoji:'S5'},{num:6,tipo:'SOCIAL_PROOF',label:'Prova Social',emoji:'S6'}];
+  if (c) return [{num:1,tipo:'HOOK',label:'Gancho',emoji:'S1'},{num:2,tipo:'FAMILY',label:'Apoio Familiar',emoji:'S2'},{num:3,tipo:'HEALER',label:'Paje',emoji:'S3'},{num:4,tipo:'CONFLICT',label:'Conflito',emoji:'S4'},{num:5,tipo:'TRANSFORMATION',label:'Transformacao',emoji:'S5'}];
+  return [{num:1,tipo:'HOOK',label:'Gancho',emoji:'S1'},{num:2,tipo:'FAMILY',label:'Apoio Familiar',emoji:'S2'},{num:3,tipo:'HEALER',label:'Paje',emoji:'S3'},{num:4,tipo:'FAITH',label:'Fe/Acao',emoji:'S4'},{num:5,tipo:'TRANSFORMATION',label:'Transformacao',emoji:'S5'}];
+}
+
+function initDots(scenes) {
+  var c = document.getElementById('prog-dots'); c.innerHTML = '';
+  for (var i = 0; i < scenes.length; i++) {
+    var dot = document.createElement('div');
+    dot.className = 'prog-dot' + (i === 0 ? ' active' : ''); dot.id = 'pdot-' + i;
+    dot.innerHTML = scenes[i].emoji + '<br><span style="font-size:10px">' + scenes[i].label + '</span>';
+    c.appendChild(dot);
+  }
+}
+
+function setDot(i, state, label) {
+  var dot = document.getElementById('pdot-' + i); if (!dot) return;
+  dot.className = 'prog-dot ' + state;
+  if (state === 'done' && label) dot.innerHTML = 'OK<br><span style="font-size:10px">' + esc(label) + '</span>';
+}
+
+function setProgress(cur, total, label) {
+  document.getElementById('prog-bar-fill').style.width = Math.round((cur/total)*100) + '%';
+  document.getElementById('prog-label').textContent = label;
+}
+
+var NC = ['n1','n2','n3','n4','n5','n6'];
+var outputData = null;
+
+function renderScene(c, idx, total) {
+  var wrap = document.getElementById('scenesWrap');
+  if (idx === 0) {
+    document.getElementById('output').style.display = 'block';
+    var b = document.createElement('div');
+    b.style.cssText = 'background:rgba(212,168,67,.06);border:1px solid rgba(212,168,67,.18);border-radius:10px;padding:11px 15px;margin-bottom:12px;font-size:12px;color:#c9a843;line-height:1.6';
+    b.innerHTML = '<span style="font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:3px">Gerado cena por cena</span>Prompts ultra-detalhados com personagem consistente em todas as cenas.';
+    wrap.appendChild(b);
+  }
+  if (idx > 0) { var prev = document.getElementById('sc-' + (idx-1)); if (prev) prev.classList.remove('open'); }
+  var card = document.createElement('div');
+  card.className = 'sc open'; card.id = 'sc-' + idx;
+  var h = '<div class="sc-top" onclick="toggleCard(' + idx + ')">';
+  h += '<div class="sc-num ' + (NC[idx]||'n1') + '">' + c.numero + '</div>';
+  h += '<div class="sc-info"><div class="sc-name">' + (idx===0?'>> ':'') + 'Cena ' + c.numero + ' - ' + esc(c.nome||c.tipo||'') + '</div>';
+  h += '<div class="sc-meta">' + esc(c.duracao||'') + ' | ' + esc(c.personagem||'') + '</div></div>';
+  h += '<button class="sc-veo-btn" onclick="openVeo(event,' + idx + ')">Abrir Veo3</button>';
+  h += '<div class="sc-chev">v</div></div>';
+  h += '<div class="sc-body"><div class="sc-div"></div>';
+  if (idx===0 && c.tipo_gancho) h += '<div class="hook-badge">GANCHO: ' + esc(c.tipo_gancho) + '</div>';
+  if (c.para_quem_fala) h += '<div class="fala-para">Fala para: ' + esc(c.para_quem_fala) + '</div>';
+  if (c.copy_ptbr) h += '<div class="copy-box">' + esc(c.copy_ptbr) + '</div>';
+  h += '<div class="meta-g">';
+  h += '<div><div class="m-lbl">Cenario e Luz</div><div class="m-val">' + esc(c.cenario_detalhado||'-') + '</div></div>';
+  h += '<div><div class="m-lbl">Acao</div><div class="m-val">' + esc(c.acao_detalhada||'-') + '</div></div>';
+  h += '<div><div class="m-lbl">Camera</div><div class="m-val">' + esc(c.camera_detalhada||'-') + '</div></div>';
+  h += '<div><div class="m-lbl">Som</div><div class="m-val">' + esc(c.som_detalhado||'-') + '</div></div>';
+  h += '</div>';
+  h += '<div class="veo-lbl">PROMPT VEO3 - PRONTO PARA COLAR</div>';
+  h += '<div class="veo-box" id="veobox-' + idx + '">' + esc(c.prompt_veo3||'') + '</div>';
+  h += '<div class="veo-acts"><button class="vbtn" id="cpbtn-' + idx + '" onclick="copyVeo(' + idx + ')">Copiar prompt</button>';
+  h += '<button class="v3btn" onclick="openVeo(event,' + idx + ')">Abrir no Veo3</button></div></div>';
+  card.innerHTML = h;
+  wrap.appendChild(card);
+  card.scrollIntoView({ behavior:'smooth', block:'nearest' });
+}
+
+function renderRoteiro(r, t) {
+  var wrap = document.getElementById('scenesWrap');
+  var rot = document.createElement('div'); rot.className = 'rot-card';
+  rot.innerHTML = '<div class="rot-head" onclick="this.parentElement.classList.toggle(\'open\')"><div class="rot-ico">R</div><div class="rot-ttl">Roteiro Fechado Completo (S1 a S' + t + ')</div><div class="rot-chev">v</div></div><div class="rot-body"><div class="rot-txt">' + esc(r) + '</div></div>';
+  wrap.appendChild(rot);
+}
+
+function montarRoteiro(cenas, d) {
+  var r = 'ROTEIRO FECHADO\n================================================\n\nProtagonista: ' + d.nome + ', ' + d.idade + ' anos\nDor: ' + d.dor + '\nProduto: ' + d.prod + '\nTom: ' + d.tom + '\n\n';
+  for (var i = 0; i < cenas.length; i++) {
+    var c = cenas[i];
+    r += '------------------------------------------------\nCENA ' + c.numero + ' - ' + (c.nome||c.tipo) + '\nFala para: ' + (c.para_quem_fala||'-') + '\nCenario: ' + (c.cenario_detalhado||'-') + '\nAcao: ' + (c.acao_detalhada||'-') + '\nCamera: ' + (c.camera_detalhada||'-') + '\nSom: ' + (c.som_detalhado||'-') + '\n\nFALA: "' + (c.copy_ptbr||'-') + '"\n\n';
+  }
+  return r;
+}
+
+async function gerar() {
+  var s = await sb.auth.getSession();
+  if (!s.data.session) { window.location.href = 'login.html'; return; }
+  currentToken = s.data.session.access_token;
+
+  var btn = document.getElementById('genBtn');
+  var loading = document.getElementById('loading');
+  var output = document.getElementById('output');
+  var errDiv = document.getElementById('errDiv');
+
+  btn.disabled = true; btn.textContent = 'Gerando...';
+  errDiv.innerHTML = ''; output.style.display = 'none';
+  document.getElementById('scenesWrap').innerHTML = '';
+
+  var d = getData();
+  var scenes = getSceneList(d);
+  var total = scenes.length;
+  var ancora = d.nome + ', ' + d.idade + ' years old, ' + d.pele + ', ' + d.cabcor + ' ' + d.cabestilo + ', wearing a ' + d.rcorEn + ' ' + d.roupa + ', ' + d.acess + ', ' + d.calc;
+
+  initDots(scenes);
+  setProgress(0, total+1, 'Iniciando...');
+  document.getElementById('prog-count').textContent = '0 / ' + total;
+  loading.style.display = 'block';
+
+  var cenas = [];
+  try {
+    for (var i = 0; i < scenes.length; i++) {
+      var scene = scenes[i];
+      setProgress(i, total+1, 'Gerando Cena ' + scene.num + ' - ' + scene.label + '...');
+      document.getElementById('prog-count').textContent = i + ' / ' + total;
+      setDot(i, 'active', '');
+
+      var res = await fetch('/api/gerar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + currentToken },
+        body: JSON.stringify({ briefing: d, scene: scene, total: total, ancora: ancora })
+      });
+
+      if (!res.ok) {
+        var errData = await res.json().catch(function() { return { error: 'Erro HTTP ' + res.status }; });
+        if (res.status === 401 || res.status === 403) { window.location.href = 'login.html'; return; }
+        throw new Error(errData.error || 'Erro na cena ' + scene.num);
+      }
+
+      var cena = await res.json();
+      cenas.push(cena);
+      setDot(i, 'done', cena.nome || scene.label);
+      if (i+1 < total) setDot(i+1, 'active', '');
+      renderScene(cena, i, total);
+    }
+
+    setProgress(total, total+1, 'Montando roteiro...');
+    document.getElementById('prog-count').textContent = total + ' / ' + total;
+    var roteiro = montarRoteiro(cenas, d);
+    outputData = { cenas: cenas, roteiro_fechado: roteiro };
+    renderRoteiro(roteiro, cenas.length);
+    setProgress(total+1, total+1, 'Criativo completo!');
+    setTimeout(function() { loading.style.display = 'none'; output.scrollIntoView({ behavior:'smooth', block:'start' }); }, 400);
+
+  } catch(err) {
+    loading.style.display = 'none';
+    errDiv.innerHTML = '<div class="err">Erro: ' + esc(err.message) + '</div>';
+  } finally {
+    btn.disabled = false; btn.textContent = 'Gerar';
+  }
+}
+
+function toggleCard(idx) { var c = document.getElementById('sc-' + idx); if (c) c.classList.toggle('open'); }
+
+function openVeo(e, idx) {
+  e.stopPropagation();
+  if (!outputData || !outputData.cenas || !outputData.cenas[idx]) return;
+  copyText(outputData.cenas[idx].prompt_veo3 || '', function() {
+    showToast('Prompt copiado! Abrindo Veo3...');
+    setTimeout(function() { window.open('https://labs.google/fx/tools/video-fx', '_blank'); }, 700);
+  });
+}
+
+function copyVeo(idx) {
+  var box = document.getElementById('veobox-' + idx);
+  var btn = document.getElementById('cpbtn-' + idx);
+  if (!box || !btn) return;
+  copyText(box.innerText || box.textContent, function() {
+    btn.textContent = 'Copiado!'; btn.classList.add('copied');
+    showToast('Prompt da cena ' + (idx+1) + ' copiado!');
+    setTimeout(function() { btn.textContent = 'Copiar prompt'; btn.classList.remove('copied'); }, 2500);
+  });
+}
+
+function copiarTudo() {
+  if (!outputData) return;
+  var txt = 'CRIATIVO CINEMATOGRAFICO COMPLETO\n\n';
+  (outputData.cenas||[]).forEach(function(c) {
+    txt += 'CENA ' + c.numero + ' - ' + (c.nome||c.tipo) + '\nFala para: ' + (c.para_quem_fala||'-') + '\nCopy: "' + (c.copy_ptbr||'') + '"\n\nCenario: ' + (c.cenario_detalhado||'') + '\nAcao: ' + (c.acao_detalhada||'') + '\nCamera: ' + (c.camera_detalhada||'') + '\nSom: ' + (c.som_detalhado||'') + '\n\nPROMPT VEO3:\n' + (c.prompt_veo3||'') + '\n\n================================================\n\n';
+  });
+  if (outputData.roteiro_fechado) txt += outputData.roteiro_fechado;
+  var btn = document.getElementById('copyAllBtn');
+  copyText(txt, function() {
+    btn.textContent = 'Copiado!'; btn.classList.add('ok');
+    showToast('Criativo completo copiado!');
+    setTimeout(function() { btn.textContent = 'Copiar tudo'; btn.classList.remove('ok'); }, 2500);
+  });
+}
+
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(function() { t.classList.remove('show'); }, 3000);
+}
+</script>
+</body>
+</html>

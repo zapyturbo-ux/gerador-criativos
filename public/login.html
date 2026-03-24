@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gerador de Criativos - Login</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,700;1,700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:#08070a;color:#eee8f8;font-family:'Outfit',sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+body::before{content:'';position:fixed;top:-200px;left:50%;transform:translateX(-50%);width:800px;height:600px;background:radial-gradient(ellipse at 30% 40%,rgba(124,92,191,.15) 0%,transparent 60%),radial-gradient(ellipse at 70% 60%,rgba(212,168,67,.08) 0%,transparent 55%);pointer-events:none;z-index:0}
+.box{background:#13111a;border:1px solid #252233;border-radius:20px;padding:48px 40px;width:100%;max-width:420px;position:relative;z-index:1;box-shadow:0 24px 80px rgba(0,0,0,.5)}
+.logo{font-family:'Cormorant Garamond',serif;font-size:2rem;font-weight:700;font-style:italic;color:#d4a843;text-align:center;margin-bottom:4px}
+.sub{font-size:13px;color:#6a6480;text-align:center;margin-bottom:8px}
+.divider{height:1px;background:linear-gradient(90deg,transparent,#342f48,transparent);margin:20px 0 28px}
+.field{display:flex;flex-direction:column;gap:7px;margin-bottom:18px}
+label{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#6a6480}
+input{background:#0f0e13;border:1px solid #252233;border-radius:9px;color:#eee8f8;font-family:'Outfit',sans-serif;font-size:14px;padding:12px 14px;outline:none;transition:border-color .2s,box-shadow .2s;width:100%}
+input:focus{border-color:#7c5cbf;box-shadow:0 0 0 3px rgba(124,92,191,.12)}
+.btn{width:100%;padding:14px;background:linear-gradient(135deg,#7c5cbf 0%,#d4a843 100%);border:none;border-radius:10px;color:#fff;font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:700;font-style:italic;cursor:pointer;transition:opacity .2s,box-shadow .2s;margin-top:8px;box-shadow:0 6px 30px rgba(124,92,191,.25)}
+.btn:hover{opacity:.92;box-shadow:0 8px 40px rgba(124,92,191,.35)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.err{background:rgba(176,48,48,.1);border:1px solid rgba(176,48,48,.3);border-radius:8px;color:#e07070;font-size:13px;padding:10px 14px;margin-top:12px;display:none}
+.footer-txt{text-align:center;margin-top:24px;font-size:11px;color:#4a4460}
+</style>
+</head>
+<body>
+<div class="box">
+  <div class="logo">Gerador de Criativos</div>
+  <div class="sub">Cinematograficos</div>
+  <div class="divider"></div>
+  <div class="field">
+    <label>Email</label>
+    <input type="email" id="email" placeholder="seu@email.com" autocomplete="email">
+  </div>
+  <div class="field">
+    <label>Senha</label>
+    <input type="password" id="senha" placeholder="Sua senha" autocomplete="current-password">
+  </div>
+  <button class="btn" id="btnLogin" onclick="login()">Entrar</button>
+  <div class="err" id="errMsg"></div>
+  <div class="footer-txt">Acesso exclusivo para alunos da mentoria</div>
+</div>
+
+<script>
+var SUPABASE_URL = 'https://yipnopdvicikejqvbjwr.supabase.co';
+var SUPABASE_ANON_KEY = 'sb_publishable_KfsH9F-Y-oCXwIQEpqYYUw_GPxz5U4-';
+var sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+sb.auth.getSession().then(function(r) {
+  if (r.data.session) window.location.href = 'app.html';
+});
+
+async function login() {
+  var email  = document.getElementById('email').value.trim();
+  var senha  = document.getElementById('senha').value;
+  var btn    = document.getElementById('btnLogin');
+  var errEl  = document.getElementById('errMsg');
+
+  if (!email || !senha) { mostrarErro('Preencha email e senha.'); return; }
+
+  btn.disabled = true;
+  btn.textContent = 'Entrando...';
+  errEl.style.display = 'none';
+
+  try {
+    var res = await sb.auth.signInWithPassword({ email: email, password: senha });
+    if (res.error) { mostrarErro('Email ou senha incorretos.'); return; }
+
+    var { data: aluno } = await sb.from('alunos').select('ativo').eq('email', email).single();
+    if (!aluno) { mostrarErro('Acesso nao encontrado. Contate o administrador.'); await sb.auth.signOut(); return; }
+    if (!aluno.ativo) { mostrarErro('Seu acesso esta bloqueado. Contate o administrador.'); await sb.auth.signOut(); return; }
+
+    window.location.href = 'app.html';
+
+  } catch(e) {
+    mostrarErro('Erro ao fazer login. Tente novamente.');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Entrar';
+  }
+}
+
+function mostrarErro(msg) {
+  var e = document.getElementById('errMsg');
+  e.textContent = msg;
+  e.style.display = 'block';
+  document.getElementById('btnLogin').disabled = false;
+  document.getElementById('btnLogin').textContent = 'Entrar';
+}
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') login();
+});
+</script>
+</body>
+</html>

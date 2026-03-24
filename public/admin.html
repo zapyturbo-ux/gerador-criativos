@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Painel Admin - Gerador de Criativos</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,700;1,700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:#08070a;color:#eee8f8;font-family:'Outfit',sans-serif;min-height:100vh;padding:20px}
+body::before{content:'';position:fixed;top:-200px;left:50%;transform:translateX(-50%);width:800px;height:500px;background:radial-gradient(ellipse at 30% 40%,rgba(124,92,191,.12) 0%,transparent 60%);pointer-events:none;z-index:0}
+.wrap{max-width:1000px;margin:0 auto;position:relative;z-index:1}
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;flex-wrap:wrap;gap:12px;padding-bottom:18px;border-bottom:1px solid #252233}
+.logo{font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:700;font-style:italic;color:#d4a843}
+.badge-admin{background:rgba(176,48,48,.15);border:1px solid rgba(176,48,48,.3);border-radius:100px;color:#e07070;font-size:11px;padding:4px 12px;font-weight:500}
+.card{background:#13111a;border:1px solid #252233;border-radius:16px;padding:26px;margin-bottom:18px}
+.sec-title{font-size:10px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:#a07de8;margin-bottom:18px;padding-bottom:10px;border-bottom:1px solid #252233}
+.fg2{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+.f{display:flex;flex-direction:column;gap:6px}
+label{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#6a6480}
+input{background:#0f0e13;border:1px solid #252233;border-radius:9px;color:#eee8f8;font-family:'Outfit',sans-serif;font-size:14px;padding:10px 12px;outline:none;transition:border-color .2s;width:100%}
+input:focus{border-color:#7c5cbf}
+.btn-primary{background:linear-gradient(135deg,#7c5cbf,#d4a843);border:none;border-radius:9px;color:#fff;cursor:pointer;font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;padding:10px 20px;transition:opacity .2s}
+.btn-primary:hover{opacity:.9}
+.btn-primary:disabled{opacity:.4;cursor:not-allowed}
+.btn-sm{border-radius:6px;cursor:pointer;font-family:'Outfit',sans-serif;font-size:11px;font-weight:500;padding:5px 12px;transition:all .2s;border:1px solid}
+.btn-verde{background:rgba(46,122,80,.12);border-color:rgba(46,122,80,.3);color:#6ecf96}
+.btn-verde:hover{background:rgba(46,122,80,.2)}
+.btn-red{background:rgba(176,48,48,.1);border-color:rgba(176,48,48,.25);color:#e07070}
+.btn-red:hover{background:rgba(176,48,48,.2)}
+.btn-gray{background:rgba(100,100,120,.1);border-color:rgba(100,100,120,.25);color:#9990b5}
+.btn-gray:hover{background:rgba(100,100,120,.2)}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:#1a1825;border:1px solid #342f48;border-radius:100px;padding:11px 22px;font-size:13px;color:#eee8f8;box-shadow:0 8px 32px rgba(0,0,0,.5);z-index:9999;transition:transform .3s cubic-bezier(.34,1.56,.64,1);white-space:nowrap;pointer-events:none}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.err{background:rgba(176,48,48,.08);border:1px solid rgba(176,48,48,.2);border-radius:8px;color:#e07070;font-size:13px;padding:10px 14px;margin-top:10px;display:none}
+.ok-msg{background:rgba(46,122,80,.08);border:1px solid rgba(46,122,80,.2);border-radius:8px;color:#6ecf96;font-size:13px;padding:10px 14px;margin-top:10px;display:none}
+#loginAdmin{display:flex;align-items:center;justify-content:center;min-height:80vh}
+.login-box{background:#13111a;border:1px solid #252233;border-radius:20px;padding:40px;width:100%;max-width:380px;text-align:center}
+.login-box .logo{margin-bottom:6px}
+.login-box .sub{font-size:12px;color:#6a6480;margin-bottom:28px}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+th{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#6a6480;text-align:left;padding:10px 12px;border-bottom:1px solid #252233}
+td{font-size:13px;color:#9990b5;padding:12px;border-bottom:1px solid #1a1825;vertical-align:middle}
+td.nome{color:#eee8f8;font-weight:500}
+tr:hover td{background:rgba(255,255,255,.012)}
+.badge-ativo{background:rgba(46,122,80,.12);border:1px solid rgba(46,122,80,.25);border-radius:100px;color:#6ecf96;font-size:10px;padding:3px 10px;font-weight:500}
+.badge-inativo{background:rgba(176,48,48,.1);border:1px solid rgba(176,48,48,.2);border-radius:100px;color:#e07070;font-size:10px;padding:3px 10px;font-weight:500}
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:13px;margin-bottom:18px}
+.stat-box{background:#0f0e13;border:1px solid #252233;border-radius:12px;padding:18px;text-align:center}
+.stat-num{font-family:'Cormorant Garamond',serif;font-size:2rem;font-weight:700;color:#d4a843;line-height:1}
+.stat-label{font-size:11px;color:#6a6480;margin-top:5px}
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:1000;align-items:center;justify-content:center}
+.modal-bg.show{display:flex}
+.modal{background:#13111a;border:1px solid #342f48;border-radius:16px;padding:30px;width:100%;max-width:360px}
+.modal h3{font-size:14px;font-weight:600;margin-bottom:18px;color:#eee8f8}
+.modal-btns{display:flex;gap:8px;margin-top:18px;justify-content:flex-end}
+@media(max-width:600px){.fg2{grid-template-columns:1fr}.stats-grid{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div id="loginAdmin">
+  <div class="login-box">
+    <div class="logo">Painel Admin</div>
+    <div class="sub">Gerador de Criativos Cinematograficos</div>
+    <div class="f" style="margin-bottom:16px;text-align:left">
+      <label>Senha de Administrador</label>
+      <input type="password" id="adminSenha" placeholder="Sua senha admin">
+    </div>
+    <button class="btn-primary" style="width:100%" onclick="loginAdmin()">Entrar no Painel</button>
+    <div class="err" id="loginErr"></div>
+  </div>
+</div>
+
+<div id="painelPrincipal" style="display:none">
+  <div class="topbar">
+    <div>
+      <div class="logo">Painel Administrativo</div>
+      <div style="font-size:12px;color:#6a6480;margin-top:3px">Gerador de Criativos Cinematograficos</div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <div class="badge-admin">ADMINISTRADOR</div>
+      <button class="btn-sm btn-gray" onclick="logout()">Sair</button>
+    </div>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-box"><div class="stat-num" id="statTotal">-</div><div class="stat-label">Total de Alunos</div></div>
+    <div class="stat-box"><div class="stat-num" id="statAtivos">-</div><div class="stat-label">Ativos</div></div>
+    <div class="stat-box"><div class="stat-num" id="statBloq">-</div><div class="stat-label">Bloqueados</div></div>
+  </div>
+
+  <div class="card">
+    <div class="sec-title">+ Cadastrar Novo Aluno</div>
+    <div class="fg2">
+      <div class="f">
+        <label>Nome completo</label>
+        <input type="text" id="novoNome" placeholder="Ex: Joao Silva">
+      </div>
+      <div class="f">
+        <label>Email</label>
+        <input type="email" id="novoEmail" placeholder="aluno@email.com">
+      </div>
+      <div class="f">
+        <label>Senha inicial</label>
+        <input type="password" id="novaSenha" placeholder="Minimo 6 caracteres">
+      </div>
+      <div class="f" style="justify-content:flex-end;align-items:flex-end">
+        <button class="btn-primary" id="btnCadastrar" onclick="cadastrarAluno()">Cadastrar Aluno</button>
+      </div>
+    </div>
+    <div class="err" id="cadErr"></div>
+    <div class="ok-msg" id="cadOk"></div>
+  </div>
+
+  <div class="card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div class="sec-title" style="margin-bottom:0;border-bottom:none;padding-bottom:0">Lista de Alunos</div>
+      <button class="btn-sm btn-gray" onclick="carregarAlunos()">Atualizar</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Nome</th><th>Email</th><th>Status</th><th>Cadastrado</th><th>Ultimo Acesso</th><th>Acoes</th></tr></thead>
+        <tbody id="tabelaAlunos"><tr><td colspan="6" style="text-align:center;color:#6a6480;font-style:italic">Carregando...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modalSenha">
+  <div class="modal">
+    <h3>Alterar Senha do Aluno</h3>
+    <div class="f">
+      <label>Nova senha</label>
+      <input type="password" id="novaSenhaModal" placeholder="Minimo 6 caracteres">
+    </div>
+    <div class="err" id="senhaErr"></div>
+    <div class="modal-btns">
+      <button class="btn-sm btn-gray" onclick="fecharModal()">Cancelar</button>
+      <button class="btn-sm btn-verde" onclick="confirmarSenha()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+var adminSecret = '';
+var alunoParaSenha = null;
+
+function loginAdmin() {
+  var senha = document.getElementById('adminSenha').value;
+  if (!senha) return;
+  adminSecret = senha;
+  fetch('/api/admin', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-admin-secret': adminSecret },
+    body: JSON.stringify({ action: 'listar' })
+  }).then(function(r) {
+    if (r.status === 401) {
+      document.getElementById('loginErr').textContent = 'Senha incorreta.';
+      document.getElementById('loginErr').style.display = 'block';
+      adminSecret = '';
+      return null;
+    }
+    return r.json();
+  }).then(function(data) {
+    if (!data) return;
+    document.getElementById('loginAdmin').style.display = 'none';
+    document.getElementById('painelPrincipal').style.display = 'block';
+    renderAlunos(data.alunos || []);
+    atualizarStats(data.alunos || []);
+  });
+}
+
+function logout() {
+  adminSecret = '';
+  document.getElementById('loginAdmin').style.display = 'flex';
+  document.getElementById('painelPrincipal').style.display = 'none';
+  document.getElementById('adminSenha').value = '';
+}
+
+function carregarAlunos() {
+  fetch('/api/admin', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-admin-secret': adminSecret },
+    body: JSON.stringify({ action: 'listar' })
+  }).then(function(r) { return r.json(); }).then(function(data) {
+    renderAlunos(data.alunos || []);
+    atualizarStats(data.alunos || []);
+  });
+}
+
+function atualizarStats(alunos) {
+  document.getElementById('statTotal').textContent = alunos.length;
+  var ativos = alunos.filter(function(a) { return a.ativo; }).length;
+  document.getElementById('statAtivos').textContent = ativos;
+  document.getElementById('statBloq').textContent = alunos.length - ativos;
+}
+
+function renderAlunos(alunos) {
+  var tbody = document.getElementById('tabelaAlunos');
+  if (!alunos.length) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#6a6480;font-style:italic">Nenhum aluno cadastrado ainda.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = alunos.map(function(a) {
+    var criado = a.criado_em ? new Date(a.criado_em).toLocaleDateString('pt-BR') : '-';
+    var acesso = a.ultimo_acesso ? new Date(a.ultimo_acesso).toLocaleDateString('pt-BR') : 'Nunca';
+    return '<tr>' +
+      '<td class="nome">' + esc(a.nome) + '</td>' +
+      '<td>' + esc(a.email) + '</td>' +
+      '<td>' + (a.ativo ? '<span class="badge-ativo">Ativo</span>' : '<span class="badge-inativo">Bloqueado</span>') + '</td>' +
+      '<td>' + criado + '</td>' +
+      '<td>' + acesso + '</td>' +
+      '<td style="display:flex;gap:5px;flex-wrap:wrap">' +
+        '<button class="btn-sm btn-gray" onclick="abrirModalSenha(\'' + a.id + '\',\'' + a.user_id + '\')">Senha</button>' +
+        (a.ativo
+          ? '<button class="btn-sm btn-red" onclick="toggleAtivo(\'' + a.id + '\',false)">Bloquear</button>'
+          : '<button class="btn-sm btn-verde" onclick="toggleAtivo(\'' + a.id + '\',true)">Ativar</button>') +
+      '</td>' +
+    '</tr>';
+  }).join('');
+}
+
+function cadastrarAluno() {
+  var nome  = document.getElementById('novoNome').value.trim();
+  var email = document.getElementById('novoEmail').value.trim();
+  var senha = document.getElementById('novaSenha').value;
+  var err   = document.getElementById('cadErr');
+  var ok    = document.getElementById('cadOk');
+  var btn   = document.getElementById('btnCadastrar');
+  err.style.display = 'none'; ok.style.display = 'none';
+  if (!nome || !email || !senha) { err.textContent = 'Preencha todos os campos.'; err.style.display = 'block'; return; }
+  if (senha.length < 6) { err.textContent = 'Senha deve ter pelo menos 6 caracteres.'; err.style.display = 'block'; return; }
+  btn.disabled = true; btn.textContent = 'Cadastrando...';
+  fetch('/api/admin', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-admin-secret': adminSecret },
+    body: JSON.stringify({ action: 'cadastrar', nome: nome, email: email, senha: senha })
+  }).then(function(r) { return r.json(); }).then(function(data) {
+    if (data.error) { err.textContent = data.error; err.style.display = 'block'; return; }
+    ok.textContent = 'Aluno cadastrado com sucesso!';
+    ok.style.display = 'block';
+    document.getElementById('novoNome').value = '';
+    document.getElementById('novoEmail').value = '';
+    document.getElementById('novaSenha').value = '';
+    showToast('Aluno cadastrado!');
+    carregarAlunos();
+  }).finally(function() { btn.disabled = false; btn.textContent = 'Cadastrar Aluno'; });
+}
+
+function toggleAtivo(id, ativo) {
+  fetch('/api/admin', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-admin-secret': adminSecret },
+    body: JSON.stringify({ action: 'toggleAtivo', id: id, ativo: ativo })
+  }).then(function() { showToast(ativo ? 'Aluno ativado!' : 'Aluno bloqueado!'); carregarAlunos(); });
+}
+
+function abrirModalSenha(id, userId) {
+  alunoParaSenha = { id: id, user_id: userId };
+  document.getElementById('novaSenhaModal').value = '';
+  document.getElementById('senhaErr').style.display = 'none';
+  document.getElementById('modalSenha').classList.add('show');
+}
+
+function fecharModal() { document.getElementById('modalSenha').classList.remove('show'); alunoParaSenha = null; }
+
+function confirmarSenha() {
+  var nova = document.getElementById('novaSenhaModal').value;
+  var err  = document.getElementById('senhaErr');
+  if (!nova || nova.length < 6) { err.textContent = 'Minimo 6 caracteres.'; err.style.display = 'block'; return; }
+  fetch('/api/admin', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-admin-secret': adminSecret },
+    body: JSON.stringify({ action: 'alterarSenha', user_id: alunoParaSenha.user_id, nova_senha: nova })
+  }).then(function(r) { return r.json(); }).then(function(data) {
+    if (data.error) { err.textContent = data.error; err.style.display = 'block'; return; }
+    fecharModal(); showToast('Senha alterada!');
+  });
+}
+
+function esc(s) { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(function() { t.classList.remove('show'); }, 3000);
+}
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && document.getElementById('loginAdmin').style.display !== 'none') loginAdmin();
+});
+</script>
+</body>
+</html>
