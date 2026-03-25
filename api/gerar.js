@@ -82,7 +82,7 @@ function buildPrompt(d, scene, total, ancora) {
   L.push('9. Raw Brazilian Portuguese audio only. NO subtitles. NO transition effects.');
   L.push('');
   L.push('=== OUTPUT - PURE JSON ONLY ===');
-  L.push('Return ONLY a pure valid JSON object. No markdown. No code fences. No extra text.');
+  L.push('Return ONLY a pure valid JSON object. No markdown. No code fences. No extra text. The response must be json.');
   L.push('{');
   L.push('  "numero": ' + scene.num + ',');
   L.push('  "nome": "nome cinematografico desta cena em portugues",');
@@ -105,6 +105,7 @@ module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
@@ -116,7 +117,12 @@ module.exports = async function handler(req, res) {
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
     if (authError || !user) return res.status(401).json({ error: 'Token invalido' });
 
-    const { data: aluno } = await supabase.from('alunos').select('id, ativo').eq('email', user.email).single();
+    const { data: aluno } = await supabase
+      .from('alunos')
+      .select('id, ativo')
+      .eq('email', user.email)
+      .single();
+
     if (!aluno) return res.status(403).json({ error: 'Aluno nao encontrado' });
     if (!aluno.ativo) return res.status(403).json({ error: 'Acesso bloqueado. Entre em contato com o administrador.' });
 
@@ -125,39 +131,60 @@ module.exports = async function handler(req, res) {
 
     const prompt = buildPrompt(briefing, scene, total, ancora);
 
-    const claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
+    const deepseekRes = await fetch('https://api.deepseek.com/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': process.env.ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01'
+        'Authorization': `Bearer ${process.env.DEEPSEEK_API_KEY}`
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'deepseek-chat',
+        messages: [
+          {
+            role: 'system',
+            content: 'You are a world-class Veo3 prompt engineer. Always respond with a single pure valid JSON object only. No markdown. No code fences. No extra text. The response must be valid JSON.'
+          },
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
+        response_format: { type: 'json_object' },
+        temperature: 0.7,
         max_tokens: 4000,
-        system: 'You are a world-class Veo3 prompt engineer. Always respond with a single pure valid JSON object only. No markdown. No code fences. No text before or after.',
-        messages: [{ role: 'user', content: prompt }]
+        stream: false
       })
     });
 
-    if (!claudeRes.ok) {
-      const errText = await claudeRes.text();
-      return res.status(500).json({ error: 'Erro na API do Claude: ' + errText });
+    if (!deepseekRes.ok) {
+      const errText = await deepseekRes.text();
+      return res.status(500).json({ error: 'Erro na API do DeepSeek: ' + errText });
     }
 
-    const claudeData = await claudeRes.json();
-    const raw = (claudeData.content || []).map(function(c) { return c.text || ''; }).join('');
-    if (!raw.trim()) return res.status(500).json({ error: 'Resposta vazia do Claude' });
+    const deepseekData = await deepseekRes.json();
+    const raw = deepseekData?.choices?.[0]?.message?.content || '';
+
+    if (!raw.trim()) {
+      return res.status(500).json({ error: 'Resposta vazia do DeepSeek' });
+    }
 
     var clean = raw.replace(/```json/gi, '').replace(/```/g, '').trim();
     var fb = clean.indexOf('{');
     var lb = clean.lastIndexOf('}');
     if (fb < 0 || lb < 0) return res.status(500).json({ error: 'JSON nao encontrado' });
+
     var cena = JSON.parse(clean.substring(fb, lb + 1));
 
     if (scene.num === total) {
-      await supabase.from('criativos').insert({ aluno_id: aluno.id, briefing: briefing, total_cenas: total });
-      await supabase.from('alunos').update({ ultimo_acesso: new Date().toISOString() }).eq('id', aluno.id);
+      await supabase.from('criativos').insert({
+        aluno_id: aluno.id,
+        briefing: briefing,
+        total_cenas: total
+      });
+
+      await supabase.from('alunos')
+        .update({ ultimo_acesso: new Date().toISOString() })
+        .eq('id', aluno.id);
     }
 
     return res.status(200).json(cena);
